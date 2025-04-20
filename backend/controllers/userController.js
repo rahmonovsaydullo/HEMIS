@@ -75,3 +75,13 @@ exports.getTeacher = async (req, res) =>{
         res.status(501).json({message: error})
     }
 }
+
+exports.getStudents = async (req, res) =>{
+    try {
+        const result = await pool.query("SELECT * FROM users WHERE role = 'student'")
+        res.json(result.rows);
+    } catch (error) {
+        console.log(error);
+        res.status(501).json({message: error})
+    }
+}
