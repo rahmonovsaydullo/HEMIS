@@ -65,3 +65,13 @@ exports.getAllUser = async (req, res) => {
         res.status(500).json({ message: error + 'Internal server error' })
     }
 }
+
+exports.getTeacher = async (req, res) =>{
+    try {
+        const result = await pool.query("SELECT * FROM users WHERE role = 'teacher'")
+        res.json(result.rows);
+    } catch (error) {
+        console.log(error);
+        res.status(501).json({message: error})
+    }
+}
