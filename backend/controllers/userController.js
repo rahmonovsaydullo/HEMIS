@@ -27,3 +27,30 @@ exports.signup = async (req, res) => {
 }
 
 
+exports.signin = async (req, res) => {
+    try {
+        const { user_name, password } = req.body
+        const result = await pool.query(
+            `SELECT id, first_name, last_name, user_name, password FROM users WHERE user_name = $1 `,
+            [user_name]
+        );
+        if (result.rows.length === 0) {
+            return res.status(404).json({ message: "Invalid username or password" });
+        }
+
+        const user = result.rows[0]
+        const isValidPassword = await bcrypt.compare(password, user.password)
+        if (!isValidPassword) {
+            return res.status(404).json({ message: "Invalid username or password" });
+        }
+
+        const token = jwt.sign({ userId: user.id }, 'Secret key word is bla bla bla', {
+            expiresIn: '1h'
+        })
+        res.status(200).json({ user, token });
+    } catch (error) {
+        console.log(error);
+        res.status(500).json({ message: error + 'Internal server error on user login controller' })
+
+    }
+}
