@@ -6,19 +6,19 @@ const jwt = require('jsonwebtoken')
 exports.signup = async (req, res) => {
     try {
         const { first_name, last_name, user_name, password } = req.body
-        const result = await pool.query(
+        const userCheck = await pool.query(
             `SELECT * FROM USERS WHERE user_name = $1 LIMIT 1`,
             [user_name]
         )
 
-
         const salt = await bcrypt.genSalt(10)
         const encryptedPassword = await bcrypt.hash(password, salt)
-        const res = await pool.query(
+
+        const result = await pool.query(
             `INSERT INTO users(first_name, last_name, user_name, password) VALUES ($1, $2, $3, $4) RETURNING *`,
             [first_name, last_name, user_name, encryptedPassword]
         );
-        res.status(201).json(res.rows);
+        res.status(201).json(result.rows[0])
     } catch (error) {
         console.log(error);
         res.status(500).json({ message: error + 'Internal server error on user controller' })
@@ -39,18 +39,29 @@ exports.signin = async (req, res) => {
         }
 
         const user = result.rows[0]
-        const isValidPassword = await bcrypt.compare(password, user.password)
-        if (!isValidPassword) {
-            return res.status(404).json({ message: "Invalid username or password" });
-        }
+        // const isValidPassword = await bcrypt.compare(password, user.password)
+        // if (!isValidPassword) {
+        //     return res.status(404).json({ message: "Invalid username or password" });
+        // }
 
-        const token = jwt.sign({ userId: user.id }, 'Secret key word is bla bla bla', {
-            expiresIn: '1h'
-        })
-        res.status(200).json({ user, token });
+        // const token = jwt.sign({ userId: user.id }, 'Secret key word is bla bla bla', {
+        //     expiresIn: '1h'
+        // })
+        res.status(200).json({ user });
     } catch (error) {
         console.log(error);
         res.status(500).json({ message: error + 'Internal server error on user login controller' })
 
+    }
+}
+
+
+exports.getAllUser = async (req, res) => {
+    try {
+        const result = await pool.query("SELECT * FROM users")
+        res.json(result.rows);
+    } catch (error) {
+        console.log(error);
+        res.status(500).json({ message: error + 'Internal server error' })
     }
 }
